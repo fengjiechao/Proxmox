@@ -31,7 +31,7 @@ apt update&&apt dist-upgrade -y
 
 ##pvetools
 export LC_ALL=en_US.UTF-8
-apt -y install git && git clone https://github.com/ivanhao/pvetools.git
+apt -y install git ntfs-3g&& git clone https://github.com/ivanhao/pvetools.git
 
 cd pvetools
 ./pvetools.sh
