@@ -43,7 +43,13 @@ echo "options kvm ignore_msrs=1 report_ignored_msrs=0" > /etc/modprobe.d/kvm.con
 
 #Reboot when done
 
+重启上来之后检查模块是否正常加载：
+lsmod | grep vfio
+dmesg | grep -E "DMAR|IOMMU"
+lspci -v # 查看核显是否为Kernel driver in use: vfio-pci，如果不为vfio-pci，则说明核显直通失败
+find /sys/kernel/iommu_groups/ -type l  #查看分组情况
 
+##新建VM100
 qm create 100 --name Win10 --sockets 1 --cores 4 --numa 1 --memory 4096 --machine q35 --cpu host --scsihw virtio-scsi-pci --vga std --ostype win10 --net0 virtio,bridge=vmbr0 --hotplug usb --scsi0 local:60,format=raw,ssd=1, --agent 1
 
 nano /etc/pve/qemu-server/100.conf
