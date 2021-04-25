@@ -1,23 +1,37 @@
 ## Proxmox VE No-Subscription Repository
 
-##buster
-vim /etc/apt/sources.list.d/pve-enterprise.list
------
-#deb https://enterprise.proxmox.com/debian/pve buster pve-enterprise
+echo -e "deb https://mirrors.ustc.edu.cn/debian buster main contrib non-free\ndeb https://mirrors.ustc.edu.cn/debian buster-updates main contrib non-free\ndeb https://mirrors.ustc.edu.cn/debian-security/ buster/updates main non-free contrib" > /etc/apt/sources.list
 
 # PVE pve-no-subscription repository provided by proxmox.com,
 # NOT recommended for production use
-deb http://download.proxmox.com/debian/pve buster pve-no-subscription
+echo "deb https://mirrors.ustc.edu.cn/proxmox/debian/pve buster pve-no-subscription" > /etc/apt/sources.list.d/pve-install-repo.list
 -----
-wget http://download.proxmox.com/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
+wget http://mirrors.ustc.edu.cn/proxmox/debian/proxmox-ve-release-6.x.gpg -O /etc/apt/trusted.gpg.d/proxmox-ve-release-6.x.gpg
 
 ####################
 
 ##stretch
-vim /etc/apt/sources.list.d/pve-enterprise.list
------
-#deb https://enterprise.proxmox.com/debian/pve stretch pve-enterprise
+rm -f /etc/apt/sources.list.d/pve-enterprise.list
 
-# PVE pve-no-subscription repository provided by proxmox.com,
-# NOT recommended for production use
-deb http://download.proxmox.com/debian/pve stretch pve-no-subscription
+##LXC仓库源
+grep -rn "download.proxmox.com" /usr/share/perl5/PVE/*
+sed -i.bak "s#http://download.proxmox.com/images#https://mirrors.ustc.edu.cn/proxmox/images#g" /usr/share/perl5/PVE/APLInfo.pm
+wget -O /var/lib/pve-manager/apl-info/mirrors.ustc.edu.cn https://mirrors.ustc.edu.cn/proxmox/images/aplinfo.dat
+
+合并分区
+lvremove pve/data
+
+lvextend -l +100%FREE -r pve/root
+然后点击数据中心→存储
+删除local-lvm，再双击local
+除了片段，都选上，这时候点击local发现容量已经变大了
+
+
+apt update&&apt dist-upgrade -y
+
+##pvetools
+export LC_ALL=en_US.UTF-8
+apt -y install git && git clone https://github.com/ivanhao/pvetools.git
+
+cd pvetools
+./pvetools.sh
