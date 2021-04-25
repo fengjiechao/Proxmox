@@ -2,25 +2,25 @@
 ##https://www.reddit.com/r/homelab/comments/b5xpua/the_ultimate_beginners_guide_to_gpu_passthrough/
 
 #edit grub
-vim /etc/default/grub
+nano /etc/default/grub
 
 #Change the folowing lines:
 GRUB_CMDLINE_LINUX_DEFAULT=""
-#to
-GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"
-#or
-GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on"
+#to Intel CPU
+GRUB_CMDLINE_LINUX_DEFAULT="quiet kvm.ignore_msrs=1 intel_iommu=on iommu=pt video=efifb:off,vesafb:off pcie_acs_override=downstream,multifunction"
+#or AMD CPU
+GRUB_CMDLINE_LINUX_DEFAULT="quiet kvm.ignore_msrs=1 amd_iommu=on iommu=pt video=efifb:off,vesafb:off pcie_acs_override=downstream,multifunction"
 
 #run
 update-grub
 
 #Edit modules
-cat << EOF >> /etc/modules
+nano /etc/modules
 vfio
 vfio_iommu_type1
 vfio_pci
 vfio_virqfd
-EOF
+
 
 cat << EOF >> /etc/pve/qemu-server/100.conf
 agent: 1
@@ -45,26 +45,26 @@ vmgenid: 524a58dd-7e3e-44f4-abf4-9de0f490d936
 EOF
 
 #Add to blacklist
-cat << EOF >> /etc/modprobe.d/blacklist.conf
-blacklist radeon
-blacklist nouveau
-blacklist nvidia
-EOF
+nano /etc/modprobe.d/blacklist.conf
+blacklist snd_hda_intel
+blacklist mei_me
+blacklist i915
 
-#Reboot when done
+echo "options vfio_iommu_type1 allow_unsafe_interrupts=1" > /etc/modprobe.d/iommu_unsafe_interrupts.conf
 
 -----Additional modifications-----
-#Change the folowing lines:
-GRUB_CMDLINE_LINUX_DEFAULT=""
-#to
-GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on video=efifb:off"
-
 #Add Vendor:Device IDs
-lspci -nn | grep -e 'VGA.*NVIDIA' -e 'Audio.*NVIDIA'
+lspci -nn | grep VGA
+lspci -nn | grep Audio
+lspci -vvv -s 00:02
+lspci -vvv -s 00:03
+
 echo "options vfio-pci ids=10de:1381,10de:0fbc disable_vga=1" > /etc/modprobe.d/vfio.conf
 
 #Warnings in dmesg system log
 echo "options kvm ignore_msrs=1 report_ignored_msrs=0" > /etc/modprobe.d/kvm.conf
+
+#Reboot when done
 
 #Motherboard BIOS
 CSM -> Boot -> off
